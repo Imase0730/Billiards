@@ -126,6 +126,18 @@ void Game::Update(DX::StepTimer const& timer)
         vec = SimpleMath::Vector3::Transform(vec, matrix);
         m_ballInfo[i].position += vec;
         m_ballInfo[i].speed *= 0.985f;
+
+        // 移動したボールを回転させる
+        float length = vec.Length();
+        if (length)
+        {
+            // 回転軸を求める
+            float tmp = -vec.x;
+            vec.x = vec.z;
+            vec.z = tmp;
+            // 回転を加える
+            m_ballInfo[i].rotate *= SimpleMath::Quaternion::CreateFromAxisAngle(vec, vec.Length() * BALL_RADIUS);
+        }
     }
 
     // ボールの衝突判定
@@ -193,8 +205,8 @@ void Game::Render()
     // ボールの描画
     for (int i = 0; i < BN_NUM; i++)
     {
-        world = SimpleMath::Matrix::CreateTranslation(m_ballInfo[i].position);
-        m_ball[i]->Draw(world, m_view, m_proj, m_ballInfo[i].color);
+        world = SimpleMath::Matrix::CreateFromQuaternion(m_ballInfo[i].rotate) * SimpleMath::Matrix::CreateTranslation(m_ballInfo[i].position);
+        m_ball[i]->Draw(context, *m_states.get(), world, m_view, m_proj);
     }
 
     // パワーメーターの描画
@@ -295,13 +307,20 @@ void Game::CreateDeviceDependentResources()
 
     auto context = m_deviceResources->GetD3DDeviceContext();
 
+    // エフェクトファクトリーの作成
+    m_effectFactory = std::make_unique<EffectFactory>(device);
+    m_effectFactory->SetDirectory(L"Resources");
+
+    // ボールのモデルデータのロード
+    m_ballModel = Model::CreateFromCMO(device, L"Resources/ball.cmo", *m_effectFactory.get());
+
     // 床の作成
     m_floor = std::make_unique<Floor>(device, context, FLOOR_SIZE);
 
     // ボールの作成
     for (int i = 0; i < BN_NUM; i++)
     {
-        m_ball[i] = std::make_unique<Ball>(context, BALL_RADIUS);
+        m_ball[i] = std::make_unique<Ball>(context, BALL_RADIUS, *m_ballModel.get());
     }
 
     // ボールの影の作成
@@ -337,6 +356,7 @@ void Game::GameReset()
     m_ballInfo[BN_PLAYER].direction = 0.0f;
     m_ballInfo[BN_PLAYER].speed = 0.0f;
     m_ballInfo[BN_PLAYER].color = Colors::White;
+    m_ballInfo[BN_PLAYER].rotate = GetRandomRotate();
 
     // プレイヤーのボール以外のボール情報の初期化
     for (size_t i = 1; i < BN_NUM; i++)
@@ -347,6 +367,7 @@ void Game::GameReset()
         m_ballInfo[i].position.z = static_cast<float>(rand() % static_cast<int>(BALL_PUT_AERA_SIZE)) - BALL_PUT_AERA_SIZE / 2.0f;
         m_ballInfo[i].direction = 0.0f;
         m_ballInfo[i].speed = 0.0f;
+        m_ballInfo[i].rotate = GetRandomRotate();
 
         // ランダムでボールの色を設定
         switch (static_cast<BallColor>(rand() % static_cast<int>(BallColor::NumItems)))
@@ -403,6 +424,15 @@ bool Game::CheckGameOver()
         return true;
     }
     return false;
+}
+
+DirectX::SimpleMath::Quaternion Game::GetRandomRotate()
+{
+    float yaw   = XMConvertToRadians(static_cast<float>(rand() % 360 - 180));
+    float pitch = XMConvertToRadians(static_cast<float>(rand() % 360 - 180));
+    float roll  = XMConvertToRadians(static_cast<float>(rand() % 360 - 180));
+
+    return SimpleMath::Quaternion::CreateFromYawPitchRoll(yaw, pitch, roll);
 }
 
 void Game::OnDeviceLost()

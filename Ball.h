@@ -9,19 +9,20 @@ class Ball
 {
 private:
 
-	// 球
-	std::unique_ptr<DirectX::GeometricPrimitive> m_ball;
+	// モデルデータへのポインタ
+	const DirectX::Model& m_model;
 
 public:
 	
 	// コンストラクタ
-	Ball(ID3D11DeviceContext* context, float radius);
+	Ball(ID3D11DeviceContext* context, float radius, const DirectX::Model& model);
 
 	// 描画関数
-	void Draw(DirectX::SimpleMath::Matrix world,
+	void Draw(ID3D11DeviceContext* context,
+		const DirectX::CommonStates& states,
+		DirectX::SimpleMath::Matrix world,
 		DirectX::SimpleMath::Matrix view,
-		DirectX::SimpleMath::Matrix proj,
-		DirectX::SimpleMath::Color color);
+		DirectX::SimpleMath::Matrix proj);
 
 };
 

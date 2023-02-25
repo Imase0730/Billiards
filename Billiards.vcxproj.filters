@@ -14,6 +14,9 @@
     <Filter Include="GameObject">
       <UniqueIdentifier>{70de8955-ee64-4d2a-bd5b-a9ecb359b3d5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Models">
+      <UniqueIdentifier>{1a6c6ac9-5e62-450e-b9a9-87293234cce3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -80,5 +83,10 @@
     <ImageContentTask Include="Textures\shadow.png">
       <Filter>Textures</Filter>
     </ImageContentTask>
+  </ItemGroup>
+  <ItemGroup>
+    <MeshContentTask Include="Models\Ball.fbx">
+      <Filter>Models</Filter>
+    </MeshContentTask>
   </ItemGroup>
 </Project>

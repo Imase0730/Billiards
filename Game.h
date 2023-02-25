@@ -98,6 +98,7 @@ private:
         float direction;                        // 方向
         float speed;                            // 速さ
         DirectX::SimpleMath::Color color;       // 色
+        DirectX::SimpleMath::Quaternion rotate; // 回転
     };
 
     // ボールの数
@@ -129,6 +130,12 @@ private:
     // パワー
     float m_power;
 
+    // エフェクトファクトリー
+    std::unique_ptr<DirectX::EffectFactory> m_effectFactory;
+
+    // モデル
+    std::unique_ptr<DirectX::Model> m_ballModel;
+
 private:
 
     // ゲームのリセット関数
@@ -142,5 +149,8 @@ private:
 
     // ゲームオーバーチェック
     bool CheckGameOver();
+
+    // ランダムな回転を表すクォタニオンを求める関数
+    DirectX::SimpleMath::Quaternion GetRandomRotate();
 
 };

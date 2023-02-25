@@ -93,3 +93,4 @@ namespace DX
 #include "DDSTextureLoader.h"
 #include "CommonStates.h"
 #include "Keyboard.h"
+#include "Model.h"
