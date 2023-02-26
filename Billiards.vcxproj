@@ -236,9 +236,6 @@
     </MeshContentTask>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <ShaderGraphContentTask Include="DGSL\BallShader.dgsl" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="packages\Microsoft.XAudio2.Redist.1.2.11\build\native\Microsoft.XAudio2.Redist.targets" Condition="Exists('packages\Microsoft.XAudio2.Redist.1.2.11\build\native\Microsoft.XAudio2.Redist.targets')" />
