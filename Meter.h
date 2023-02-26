@@ -8,6 +8,10 @@ class Meter
 {
 private:
 
+	// パワーメーターの幅と高さ
+	static const float METER_WIDTH;
+	static const float METER_HEIGHT;
+
 	std::unique_ptr<DirectX::BasicEffect> m_effect;
 	std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>> m_primitive;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputLayout;

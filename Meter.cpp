@@ -7,6 +7,10 @@
 
 using namespace DirectX;
 
+// パワーメーターの幅と高さ
+const float Meter::METER_WIDTH = 400.0f;
+const float Meter::METER_HEIGHT = 20.0f;
+
 Meter::Meter(ID3D11Device* device, ID3D11DeviceContext* context, int width, int height)
 	: m_windowWidth(width), m_windowHeight(height), m_power{}
 {
@@ -37,14 +41,14 @@ void Meter::Draw(ID3D11DeviceContext* context, DirectX::CommonStates* states)
 	{
 		VertexPositionColor(SimpleMath::Vector3(0.0f,  0.0f, 0.0f), Colors::Red),
 		VertexPositionColor(SimpleMath::Vector3(0.0f,  0.0f, 0.0f), Colors::Blue),
-		VertexPositionColor(SimpleMath::Vector3(0.0f, 20.0f, 0.0f), Colors::Red),
-		VertexPositionColor(SimpleMath::Vector3(0.0f, 20.0f, 0.0f), Colors::Blue),
+		VertexPositionColor(SimpleMath::Vector3(0.0f, METER_HEIGHT, 0.0f), Colors::Red),
+		VertexPositionColor(SimpleMath::Vector3(0.0f, METER_HEIGHT, 0.0f), Colors::Blue),
 	};
 	// パワーメーターのインデックス情報
 	static uint16_t indexes[] = { 0, 1, 2, 1, 3, 2 };
 
 	// 右端の２つの頂点を移動させる
-	vertexes[1].position.x = vertexes[3].position.x = fabsf(m_power) * 400.0f;
+	vertexes[1].position.x = vertexes[3].position.x = fabsf(m_power) * METER_WIDTH;
 
 	SimpleMath::Matrix world, view, proj;
 
