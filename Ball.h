@@ -9,7 +9,7 @@ class Ball
 {
 private:
 
-	// モデルデータへのポインタ
+	// モデルデータへの参照
 	const DirectX::Model& m_model;
 
 public:

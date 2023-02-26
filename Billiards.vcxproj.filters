@@ -17,6 +17,9 @@
     <Filter Include="Models">
       <UniqueIdentifier>{1a6c6ac9-5e62-450e-b9a9-87293234cce3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="DGSL">
+      <UniqueIdentifier>{bc466497-bfda-456a-8677-2dd4edeec559}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -88,5 +91,10 @@
     <MeshContentTask Include="Models\Ball.fbx">
       <Filter>Models</Filter>
     </MeshContentTask>
+  </ItemGroup>
+  <ItemGroup>
+    <ShaderGraphContentTask Include="DGSL\BallShader.dgsl">
+      <Filter>DGSL</Filter>
+    </ShaderGraphContentTask>
   </ItemGroup>
 </Project>

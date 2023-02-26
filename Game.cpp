@@ -308,11 +308,23 @@ void Game::CreateDeviceDependentResources()
     auto context = m_deviceResources->GetD3DDeviceContext();
 
     // エフェクトファクトリーの作成
-    m_effectFactory = std::make_unique<EffectFactory>(device);
+    m_effectFactory = std::make_unique<DGSLEffectFactory>(device);
     m_effectFactory->SetDirectory(L"Resources");
 
     // ボールのモデルデータのロード
     m_ballModel = Model::CreateFromCMO(device, L"Resources/ball.cmo", *m_effectFactory.get());
+
+    // ライトの設定
+    m_ballModel->UpdateEffects([&](IEffect* effect) 
+        {
+            auto lights = dynamic_cast<IEffectLights*>(effect);
+            if (lights)
+            {
+                lights->SetLightDirection(0, SimpleMath::Vector3(0.0f, -1.0f, 0.0f));
+                lights->SetAmbientLightColor(Colors::White);
+            }
+        }
+    );
 
     // 床の作成
     m_floor = std::make_unique<Floor>(device, context, FLOOR_SIZE);

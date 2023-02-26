@@ -131,7 +131,7 @@ private:
     float m_power;
 
     // エフェクトファクトリー
-    std::unique_ptr<DirectX::EffectFactory> m_effectFactory;
+    std::unique_ptr<DirectX::DGSLEffectFactory> m_effectFactory;
 
     // モデル
     std::unique_ptr<DirectX::Model> m_ballModel;
