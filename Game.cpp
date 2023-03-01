@@ -28,6 +28,12 @@ const float Game::BALL_PUT_AERA_SIZE = 40.0f;
 // １フレーム辺りのカメラの回転角度
 const float Game::FRAME_ROTATE_ANGLE = 1.0f;
 
+// １フレーム辺りのパワーの変化量
+const float Game::AMOUNT_OF_CHANGE_OF_POWER = 0.01f;
+
+// 球の最大速度
+const float Game::MAX_BALL_SPEED = 1.0f;
+
 Game::Game() noexcept(false)
     : m_power{}
 {
@@ -55,7 +61,7 @@ void Game::Initialize(HWND window, int width, int height)
     m_timer.SetFixedTimeStep(true);
     m_timer.SetTargetElapsedSeconds(1.0 / 60);
     */
-    GameReset();
+    InitializeGame();
 }
 
 #pragma region Frame Update
@@ -84,7 +90,7 @@ void Game::Update(DX::StepTimer const& timer)
     tracker.Update(kb);
 
     // パワーの設定
-    m_power += 0.01f;
+    m_power += AMOUNT_OF_CHANGE_OF_POWER;
     if (m_power > 1.0f) m_power = -1.0f;
     m_meter->SetPower(fabsf(m_power));
 
@@ -105,7 +111,7 @@ void Game::Update(DX::StepTimer const& timer)
     if (tracker.pressed.Space)
     {
         // ボールを打ち出す
-        m_ballInfo[BN_PLAYER].speed += fabsf(m_power) * 1.0f;
+        m_ballInfo[BN_PLAYER].speed = fabsf(m_power) * MAX_BALL_SPEED;
     }
 
     // 左右キーでカメラの向きを回転する
@@ -133,7 +139,7 @@ void Game::Update(DX::StepTimer const& timer)
     {
         for (int j = i + 1; j < BN_NUM; j++)
         {
-            // 円と円の衝突判定
+            // 球と球の衝突判定
             SimpleMath::Vector3 v = m_ballInfo[i].position - m_ballInfo[j].position;
             if (v.LengthSquared() < (BALL_RADIUS * 2.0f) * (BALL_RADIUS * 2.0f))
             {
@@ -147,14 +153,14 @@ void Game::Update(DX::StepTimer const& timer)
     if (CheckGameClear())
     {
         MessageBox(nullptr, L"GameClear", L"おめでとう!", MB_OK);
-        GameReset();
+        InitializeGame();
     }
 
     // ゲームオーバーチェック
     if (CheckGameOver())
     {
         MessageBox(nullptr, L"GameOver", L"残念", MB_OK);
-        GameReset();
+        InitializeGame();
     }
     
 }
@@ -181,20 +187,16 @@ void Game::Render()
     DirectX::SimpleMath::Matrix world;
 
     // 床の描画
-    m_floor->Draw(context, m_states.get(), world, m_view, m_proj);
+    DrawFloor(context, m_states.get(), world, m_view, m_proj);
 
-    // ボールの影の描画
+    // 球の影の描画
+    DrawShadow(context, m_states.get());
+
+    // 球の描画
     for (int i = 0; i < BN_NUM; i++)
     {
         world = SimpleMath::Matrix::CreateTranslation(m_ballInfo[i].position);
-        m_shadow[i]->Draw(context, m_states.get(), world, m_view, m_proj);
-    }
-
-    // ボールの描画
-    for (int i = 0; i < BN_NUM; i++)
-    {
-        world = SimpleMath::Matrix::CreateTranslation(m_ballInfo[i].position);
-        m_ball[i]->Draw(world, m_view, m_proj, m_ballInfo[i].color);
+        m_ball->Draw(world, m_view, m_proj, m_ballInfo[i].color);
     }
 
     // パワーメーターの描画
@@ -295,25 +297,32 @@ void Game::CreateDeviceDependentResources()
 
     auto context = m_deviceResources->GetD3DDeviceContext();
 
-    // 床の作成
-    m_floor = std::make_unique<Floor>(device, context, FLOOR_SIZE);
+    // エフェクトの作成
+    m_effect = std::make_unique<BasicEffect>(device);
+    m_effect->SetLightingEnabled(false);
+    m_effect->SetTextureEnabled(true);
+    m_effect->SetVertexColorEnabled(false);
+ 
+    // 入力レイアウトの作成
+    DX::ThrowIfFailed(
+        CreateInputLayoutFromEffect<VertexPositionTexture>(device, m_effect.get(), m_inputLayout.ReleaseAndGetAddressOf())
+    );
+ 
+    // プリミティブバッチの作成
+    m_primitiveBatch = std::make_unique<PrimitiveBatch<VertexPositionTexture>>(context);
+ 
+    // テクスチャの読み込み
+    CreateDDSTextureFromFile(device, L"Resources/floor.dds", nullptr, m_floorTexture.ReleaseAndGetAddressOf());
+    CreateDDSTextureFromFile(device, L"Resources/shadow.dds", nullptr, m_shadowTexture.ReleaseAndGetAddressOf());
 
     // ボールの作成
-    for (int i = 0; i < BN_NUM; i++)
-    {
-        m_ball[i] = std::make_unique<Ball>(context, BALL_RADIUS);
-    }
-
-    // ボールの影の作成
-    for (int i = 0; i < BN_NUM; i++)
-    {
-        m_shadow[i] = std::make_unique<Shadow>(device, context, BALL_RADIUS);
-    }
+    m_ball = DirectX::GeometricPrimitive::CreateSphere(context, BALL_RADIUS * 2.0f);
 
     // パワーメーターの作成
     int width, height;
     GetDefaultSize(width, height);
     m_meter = std::make_unique<Meter>(device, context, width, height);
+ 
 }
 
 // Allocate all memory resources that change on a window SizeChanged event.
@@ -328,7 +337,7 @@ void Game::CreateWindowSizeDependentResources()
         static_cast<float>(width) / static_cast<float>(height), 1.0f, 1000.0f);
 }
 
-void Game::GameReset()
+void Game::InitializeGame()
 {
     // プレイヤーのボール情報初期化
     m_ballInfo[BN_PLAYER].position.x = 0.0f;
@@ -374,7 +383,7 @@ void Game::SetBallSpeed(BallInfo* ball_a, BallInfo* ball_b)
     ball_b->direction = ball_a->direction + XM_PI;
 
     v.Normalize();
-    ball_b->position = ball_a->position + (v * 2.01f);
+    ball_b->position = ball_a->position + (v * (BALL_RADIUS * 2.0f + 0.01f));
     ball_b->speed = ball_a->speed;
 }
 
@@ -405,17 +414,111 @@ bool Game::CheckGameOver()
     return false;
 }
 
+void Game::DrawFloor(ID3D11DeviceContext* context,
+    DirectX::CommonStates* states,
+    DirectX::SimpleMath::Matrix world,
+    DirectX::SimpleMath::Matrix view,
+    DirectX::SimpleMath::Matrix proj)
+{
+    // エフェクトを適応する
+    m_effect->SetWorld(world);
+    m_effect->SetView(view);
+    m_effect->SetProjection(proj);
+    m_effect->SetTexture(m_floorTexture.Get());
+    m_effect->Apply(context);
+
+    // 入力レイアウトの設定
+    context->IASetInputLayout(m_inputLayout.Get());
+
+    // テクスチャサンプラの設定
+    ID3D11SamplerState* sampler[] = { states->PointWrap() };
+    context->PSSetSamplers(0, 1, sampler);
+
+    // ブレンドステートの設定
+    context->OMSetBlendState(states->Opaque(), nullptr, 0xffffffff);
+
+    // 深度バッファの設定
+    context->OMSetDepthStencilState(states->DepthDefault(), 0);
+
+    // 床の頂点情報
+    static const float halfFloorSize = FLOOR_SIZE / 2.0f;
+    static VertexPositionTexture vertexes[] =
+    {
+        VertexPositionTexture(SimpleMath::Vector3(-halfFloorSize, -1.0f, -halfFloorSize), SimpleMath::Vector2(0.0f, 0.0f)),
+        VertexPositionTexture(SimpleMath::Vector3( halfFloorSize, -1.0f, -halfFloorSize), SimpleMath::Vector2(halfFloorSize, 0.0f)),
+        VertexPositionTexture(SimpleMath::Vector3(-halfFloorSize, -1.0f,  halfFloorSize), SimpleMath::Vector2(0.0f, halfFloorSize)),
+        VertexPositionTexture(SimpleMath::Vector3( halfFloorSize, -1.0f,  halfFloorSize), SimpleMath::Vector2(halfFloorSize, halfFloorSize)),
+    };
+    // 床のインデックス情報
+    static uint16_t indexes[] = { 0, 1, 2, 1, 3, 2 };
+
+    // 床を描画
+    m_primitiveBatch->Begin();
+    m_primitiveBatch->DrawIndexed(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, indexes, _countof(indexes), vertexes, _countof(vertexes));
+    m_primitiveBatch->End();
+}
+
+void Game::DrawShadow(ID3D11DeviceContext* context, DirectX::CommonStates* states)
+{
+    // エフェクトを適応する
+    m_effect->SetWorld(SimpleMath::Matrix::Identity);
+    m_effect->SetView(m_view);
+    m_effect->SetProjection(m_proj);
+    m_effect->SetTexture(m_shadowTexture.Get());
+    m_effect->Apply(context);
+
+    // 入力レイアウトの設定
+    context->IASetInputLayout(m_inputLayout.Get());
+
+    // テクスチャサンプラの設定
+    ID3D11SamplerState* sampler[] = { states->LinearClamp() };
+    context->PSSetSamplers(0, 1, sampler);
+
+    // アルファブレンドの設定
+    context->OMSetBlendState(states->AlphaBlend(), nullptr, 0xffffffff);
+
+    // 深度バッファの設定
+    context->OMSetDepthStencilState(states->DepthNone(), 0);
+
+    // 影の頂点情報
+    static VertexPositionTexture vertexes[] =
+    {
+        VertexPositionTexture(SimpleMath::Vector3::Zero, SimpleMath::Vector2(0.0f, 0.0f)),
+        VertexPositionTexture(SimpleMath::Vector3::Zero, SimpleMath::Vector2(1.0f, 0.0f)),
+        VertexPositionTexture(SimpleMath::Vector3::Zero, SimpleMath::Vector2(0.0f, 1.0f)),
+        VertexPositionTexture(SimpleMath::Vector3::Zero, SimpleMath::Vector2(1.0f, 1.0f)),
+    };
+    // 影のインデックス情報
+    static uint16_t indexes[] = { 0, 1, 2, 1, 3, 2 };
+
+    m_primitiveBatch->Begin();
+
+    // 影を描画
+    for (int i = 0; i < BN_NUM; i++)
+    {
+        // 影の表示位置の設定
+        float x = m_ballInfo[i].position.x;
+        float z = m_ballInfo[i].position.z;
+        vertexes[0].position = SimpleMath::Vector3(-BALL_RADIUS + x, -1.0f, -BALL_RADIUS + z);
+        vertexes[1].position = SimpleMath::Vector3( BALL_RADIUS + x, -1.0f, -BALL_RADIUS + z);
+        vertexes[2].position = SimpleMath::Vector3(-BALL_RADIUS + x, -1.0f,  BALL_RADIUS + z);
+        vertexes[3].position = SimpleMath::Vector3( BALL_RADIUS + x, -1.0f,  BALL_RADIUS + z);
+        m_primitiveBatch->DrawIndexed(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, indexes, _countof(indexes), vertexes, _countof(vertexes));
+    }
+
+    m_primitiveBatch->End();
+}
+
 void Game::OnDeviceLost()
 {
     // TODO: Add Direct3D resource cleanup here.
 
-    m_floor.reset();
-    for (int i = 0; i < BN_NUM; i++)
-    {
-        m_ball[i].reset();
-        m_shadow[i].reset();
-    }
     m_meter.reset();
+
+    m_ball.reset();
+
+    m_shadowTexture.Reset();
+    m_floorTexture.Reset();
 }
 
 void Game::OnDeviceRestored()

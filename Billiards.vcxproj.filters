@@ -23,16 +23,7 @@
     <ClInclude Include="DeviceResources.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="Ball.h">
-      <Filter>GameObject</Filter>
-    </ClInclude>
     <ClInclude Include="Meter.h">
-      <Filter>GameObject</Filter>
-    </ClInclude>
-    <ClInclude Include="Shadow.h">
-      <Filter>GameObject</Filter>
-    </ClInclude>
-    <ClInclude Include="Floor.h">
       <Filter>GameObject</Filter>
     </ClInclude>
     <ClInclude Include="Game.h" />
@@ -43,16 +34,7 @@
     <ClCompile Include="DeviceResources.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="Floor.cpp">
-      <Filter>GameObject</Filter>
-    </ClCompile>
-    <ClCompile Include="Ball.cpp">
-      <Filter>GameObject</Filter>
-    </ClCompile>
     <ClCompile Include="Meter.cpp">
-      <Filter>GameObject</Filter>
-    </ClCompile>
-    <ClCompile Include="Shadow.cpp">
       <Filter>GameObject</Filter>
     </ClCompile>
     <ClCompile Include="Game.cpp" />

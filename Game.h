@@ -7,9 +7,6 @@
 #include "DeviceResources.h"
 #include "StepTimer.h"
 
-#include "Floor.h"
-#include "Ball.h"
-#include "Shadow.h"
 #include "Meter.h"
 
 // A basic game implementation that creates a D3D11 device and
@@ -91,6 +88,12 @@ private:
     // １フレーム辺りのカメラの回転角度
     static const float FRAME_ROTATE_ANGLE;
 
+    // １フレーム辺りのパワーの変化量
+    static const float AMOUNT_OF_CHANGE_OF_POWER;
+
+    // 球の最大速度
+    static const float MAX_BALL_SPEED;
+
     // ボール情報
     struct BallInfo
     {
@@ -114,14 +117,8 @@ private:
     // 共通ステート
     std::unique_ptr<DirectX::CommonStates> m_states;
 
-    // 床
-    std::unique_ptr<Floor> m_floor;
-
     // ボール
-    std::unique_ptr<Ball> m_ball[BN_NUM];
-
-    // ボールの影
-    std::unique_ptr<Shadow> m_shadow[BN_NUM];
+    std::unique_ptr<DirectX::GeometricPrimitive> m_ball;
 
     // パワーメーター
     std::unique_ptr<Meter> m_meter;
@@ -129,10 +126,25 @@ private:
     // パワー
     float m_power;
 
+    // ベーシックエフェクト
+    std::unique_ptr<DirectX::BasicEffect> m_effect;
+
+    // プリミティブバッチ
+    std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionTexture>> m_primitiveBatch;
+
+    // 入力レイアウト
+    Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputLayout;
+
+    // 床のテクスチャハンドル
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_floorTexture;
+
+    // 球の影のテクスチャハンドル
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_shadowTexture;
+
 private:
 
     // ゲームのリセット関数
-    void GameReset();
+    void InitializeGame();
 
     // 衝突したボールの速度を設定する関数
     void SetBallSpeed(BallInfo* ball_a, BallInfo* ball_b);
@@ -142,5 +154,15 @@ private:
 
     // ゲームオーバーチェック
     bool CheckGameOver();
+
+    // 床を描画する関数
+    void DrawFloor(ID3D11DeviceContext* context,
+        DirectX::CommonStates* states,
+        DirectX::SimpleMath::Matrix world,
+        DirectX::SimpleMath::Matrix view,
+        DirectX::SimpleMath::Matrix proj);
+
+    // 球の影を描画する関数
+    void DrawShadow(ID3D11DeviceContext* context, DirectX::CommonStates* states);
 
 };
