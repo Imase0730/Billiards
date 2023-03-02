@@ -64,6 +64,9 @@ private:
 
 private:
 
+    // –€CŒW”
+    static const float FRICTION_RATE;
+
     // ƒ{[ƒ‹‚ÌF
     enum class BallColor
     {

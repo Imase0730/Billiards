@@ -13,6 +13,9 @@ using Microsoft::WRL::ComPtr;
 
 //----- 定数宣言 -----//
 
+// 摩擦係数
+const float Game::FRICTION_RATE = 0.985f;
+
 // プレイヤーのボールの番号
 const int Game::BN_PLAYER = 0;
 
@@ -131,7 +134,7 @@ void Game::Update(DX::StepTimer const& timer)
         SimpleMath::Vector3 vec = SimpleMath::Vector3(0.0f, 0.0f, m_ballInfo[i].speed);
         vec = SimpleMath::Vector3::Transform(vec, matrix);
         m_ballInfo[i].position += vec;
-        m_ballInfo[i].speed *= 0.985f;
+        m_ballInfo[i].speed *= FRICTION_RATE;
     }
 
     // ボールの衝突判定
