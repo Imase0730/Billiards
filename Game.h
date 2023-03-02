@@ -147,13 +147,13 @@ private:
     void InitializeGame();
 
     // 衝突したボールの速度を設定する関数
-    void SetBallSpeed(BallInfo* ball_a, BallInfo* ball_b);
+    void SetReflectionBallVelocity(BallInfo* ball_a, BallInfo* ball_b);
 
     // ゲームクリアチェック
-    bool CheckGameClear();
+    bool IsGameClear();
 
     // ゲームオーバーチェック
-    bool CheckGameOver();
+    bool IsGameOver();
 
     // 床を描画する関数
     void DrawFloor(ID3D11DeviceContext* context,

@@ -144,20 +144,20 @@ void Game::Update(DX::StepTimer const& timer)
             if (v.LengthSquared() < (BALL_RADIUS * 2.0f) * (BALL_RADIUS * 2.0f))
             {
                 // 衝突したのでボールの速度を設定する
-                SetBallSpeed(&m_ballInfo[i], &m_ballInfo[j]);
+                SetReflectionBallVelocity(&m_ballInfo[i], &m_ballInfo[j]);
             }
         }
     }
 
     // ゲームクリアチェック
-    if (CheckGameClear())
+    if (IsGameClear())
     {
         MessageBox(nullptr, L"GameClear", L"おめでとう!", MB_OK);
         InitializeGame();
     }
 
     // ゲームオーバーチェック
-    if (CheckGameOver())
+    if (IsGameOver())
     {
         MessageBox(nullptr, L"GameOver", L"残念", MB_OK);
         InitializeGame();
@@ -374,7 +374,7 @@ void Game::InitializeGame()
     }
 }
 
-void Game::SetBallSpeed(BallInfo* ball_a, BallInfo* ball_b)
+void Game::SetReflectionBallVelocity(BallInfo* ball_a, BallInfo* ball_b)
 {
     // 衝突したボールを反射させる（正しい計算はしていません）
     SimpleMath::Vector3 v = ball_b->position - ball_a->position;
@@ -387,11 +387,12 @@ void Game::SetBallSpeed(BallInfo* ball_a, BallInfo* ball_b)
     ball_b->speed = ball_a->speed;
 }
 
-bool Game::CheckGameClear()
+bool Game::IsGameClear()
 {
     // 全てのボールが床の外側へ出たか？
-    for (int i = 1; i < BN_NUM; i++)
+    for (int i = 0; i < BN_NUM; i++)
     {
+        if (i == BN_PLAYER) continue;
         float x = m_ballInfo[i].position.x + (FLOOR_SIZE / 2.0f);
         float z = m_ballInfo[i].position.z + (FLOOR_SIZE / 2.0f);
         if (x >= 0.0f && x <= FLOOR_SIZE && z >= 0.0f && z <= FLOOR_SIZE)
@@ -402,7 +403,7 @@ bool Game::CheckGameClear()
     return true;
 }
 
-bool Game::CheckGameOver()
+bool Game::IsGameOver()
 {
     // プレイヤーのボールが床の外側へ出たか？
     float x = m_ballInfo[BN_PLAYER].position.x + (FLOOR_SIZE / 2.0f);
